@@ -25,7 +25,7 @@ Spring Boot uses a layered controller/service/repository design and a Thymeleaf/
 
 JUnit service and integration tests cover create/retrieve/update/search, validation, role authorization, login redirect, and summary counts. The opt-in Selenium flow exercises login, create, view, search, update, and status change. Maven reports are generated in `target/surefire-reports/`.
 
-Verified during implementation: Maven `clean verify` passed; the Selenium Chrome run passed against the Dockerized app; MySQL 8.4 and the app became healthy; `/actuator/health` returned `UP`. Jenkins has been containerized; its job still needs first-run browser setup and a Jenkins pipeline run before Jenkins results can be claimed. Refer to the current handoff report for up-to-date status.
+Verified during implementation: Maven `clean verify` passed (8 tests, no failures; the opt-in Selenium test was skipped in that run); the separate Selenium Chrome end-to-end run passed against the Dockerized app; MySQL 8.4 and the app became healthy; `/actuator/health` returned `UP`. After a service restart, the database still contained the same 8 Selenium-generated demonstration records. Jenkins is containerized, but first-run setup and a real Pipeline build remain pending before Jenkins results can be claimed.
 
 ## 6. Docker, Jenkins and CI/CD
 
@@ -33,7 +33,7 @@ Compose provisions MySQL with a persistent named volume and the Spring Boot app 
 
 ## 7. Deployment and results
 
-The local app URL is <http://localhost:8080>; Jenkins is <http://localhost:8081>. This is a local lab setup, not a public internet deployment. Docker-based MySQL/app connectivity and an end-to-end browser flow were tested. Capture the Jenkins job result after first-run setup before submitting screenshots or claiming Jenkins delivery success.
+The local app URL is <http://localhost:8080>; Jenkins is <http://localhost:8081>. This is a local lab setup, not a public internet deployment. Docker-based MySQL/app connectivity and an end-to-end browser flow were tested. Capture genuine screenshots and a Jenkins job result after first-run setup before claiming Jenkins delivery success.
 
 ## 8. Limitations and future scope
 
