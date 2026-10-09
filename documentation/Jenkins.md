@@ -6,7 +6,7 @@ Jenkins runs in its own Compose project at <http://localhost:8081>. `deployment/
 
 ## Jenkins and source checkout
 
-The current Jenkins Compose service mounts this repository read-only at `/workspace`; it does not need a GitHub remote or network authentication to check out the project. Git marks only `/workspace` and its `.git` directory as safe local sources, and `core.autocrlf=true` avoids false changes when the Windows checkout is read from Linux. Jenkins's Git plugin also blocks local-file repositories by default, so this dedicated lab instance enables `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT`. Keep this Jenkins instance local and do not run untrusted jobs on it. The app's Compose project is `deployment/docker-compose.yml`; its explicit environment file is `/workspace/.env`.
+The current Jenkins Compose service mounts this repository read-only at `/workspace`; it does not need a GitHub remote or network authentication to check out the project. The Jenkins image trusts only `/workspace` and its `.git` directory in protected Git system configuration; `core.autocrlf=true` avoids false changes when the Windows checkout is read from Linux. Jenkins's Git plugin also blocks local-file repositories by default, so this dedicated lab instance enables `hudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT`. Keep this Jenkins instance local and do not run untrusted jobs on it. The app's Compose project is `deployment/docker-compose.yml`; its explicit environment file is `/workspace/.env`.
 
 To create the local job in Jenkins, use **New Item → Pipeline** and configure **Pipeline script from SCM → Git**:
 

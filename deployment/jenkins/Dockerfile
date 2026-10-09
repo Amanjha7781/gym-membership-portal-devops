@@ -10,4 +10,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends maven docker-cl
     && test "$expected" = "$actual" \
     && install -m 0755 /tmp/docker-compose /usr/local/lib/docker/cli-plugins/docker-compose \
     && rm -f /tmp/docker-compose /tmp/docker-compose.sha256
+RUN git config --system --add safe.directory /workspace \
+    && git config --system --add safe.directory /workspace/.git \
+    && git config --system core.autocrlf true
 USER jenkins
