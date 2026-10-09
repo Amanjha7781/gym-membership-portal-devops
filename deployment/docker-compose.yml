@@ -1,0 +1,64 @@
+services:
+  mysql:
+    image: mysql:8.4
+    networks: [gym-project-network]
+    environment:
+      MYSQL_DATABASE: gym_portal
+      MYSQL_USER: gym_user
+      MYSQL_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - gym_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$${MYSQL_ROOT_PASSWORD}\" --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  gym-portal:
+    networks: [gym-project-network]
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: gym-membership-portal:1.0.0
+    environment:
+      PORT: 8080
+      DATABASE_URL: jdbc:mysql://mysql:3306/gym_portal?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
+      DATABASE_USERNAME: gym_user
+      DATABASE_PASSWORD: ${DATABASE_PASSWORD:?Set DATABASE_PASSWORD in .env}
+      GYM_ADMIN_PASSWORD: ${GYM_ADMIN_PASSWORD:?Set GYM_ADMIN_PASSWORD in .env}
+      GYM_STAFF_PASSWORD: ${GYM_STAFF_PASSWORD:?Set GYM_STAFF_PASSWORD in .env}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-default}
+    ports:
+      - "${PORT:-8080}:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    restart: unless-stopped
+
+  selenium:
+    networks: [gym-project-network]
+    image: selenium/standalone-chrome:4.49.0-20260909
+    profiles: ["e2e"]
+    shm_size: 2gb
+    ports:
+      - "4444:4444"
+    depends_on:
+      gym-portal:
+        condition: service_healthy
+
+volumes:
+  gym_mysql_data:
+    name: gym-membership-portal-mysql
+
+networks:
+  gym-project-network:
+    name: gym-project-network

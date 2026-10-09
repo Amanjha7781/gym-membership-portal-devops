@@ -1,0 +1,17 @@
+target/
+.idea/
+.vscode/
+*.iml
+.env
+.env.*
+!.env.example
+screenshots/*
+!screenshots/.gitkeep
+logs/
+*.log
+__pycache__/
+.pytest_cache/
+tests/e2e/.venv/
+tests/e2e/.pytest_cache/
+tests/e2e/__pycache__/
+

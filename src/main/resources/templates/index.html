@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Dashboard · Gym Portal</title><link rel="stylesheet" href="/css/portal.css"></head>
+<body>
+<header class="topbar"><a class="brand" href="/"><span class="brand-mark small">GP</span><span>Gym Portal<small>MEMBERSHIP MANAGEMENT</small></span></a><div class="top-actions"><span class="user-chip" sec:authentication="name">Staff</span><form method="post" action="/logout"><button class="button ghost" type="submit">Sign out</button></form></div></header>
+<main class="container">
+    <div class="page-heading"><div><p class="eyebrow">OVERVIEW</p><h1>Good day</h1><p class="muted">Here’s what’s happening at your gym.</p></div><a class="button primary" href="/members/new" id="add-member">＋ Add member</a></div>
+    <div class="alert success" th:if="${notice}" th:text="${notice}"></div>
+    <section class="stats" aria-label="Membership summary">
+        <article class="stat-card"><span class="stat-label">Total members</span><strong th:text="${total}">0</strong><span class="stat-note">All registered members</span></article>
+        <article class="stat-card"><span class="stat-label">Active</span><strong class="green" th:text="${active}">0</strong><span class="stat-note">Currently training</span></article>
+        <article class="stat-card"><span class="stat-label">Inactive</span><strong class="amber" th:text="${inactive}">0</strong><span class="stat-note">Membership paused</span></article>
+        <article class="stat-card"><span class="stat-label">Expired</span><strong class="red" th:text="${expired}">0</strong><span class="stat-note">Needs renewal</span></article>
+    </section>
+    <section class="panel">
+        <div class="panel-heading"><div><h2>Members</h2><p class="muted">Search by name, email, or member ID.</p></div><form class="search-form" method="get" action="/"><input id="member-search" name="search" placeholder="Search members…" th:value="${search}"><button class="button secondary" type="submit">Search</button></form></div>
+        <div class="table-wrap"><table><thead><tr><th>Member</th><th>Contact</th><th>Plan</th><th>Dates</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+        <tr th:each="member : ${members}" th:attr="data-member-id=${member.id}">
+            <td><strong th:text="${member.name}">Name</strong><span class="subline" th:text="|ID #${member.id}|">ID</span></td><td><span th:text="${member.email}">Email</span><span class="subline" th:text="${member.phone}">Phone</span></td>
+            <td th:text="${member.plan}">MONTHLY</td><td><span th:text="${member.startDate}">Start</span><span class="subline" th:text="${member.endDate}">End</span></td>
+            <td><span class="badge" th:classappend="${' ' + #strings.toLowerCase(member.status)}" th:text="${member.status}">ACTIVE</span></td>
+            <td class="actions"><a class="button tiny secondary" th:href="@{/members/{id}/edit(id=${member.id})}">Edit</a><form method="post" th:action="@{/members/{id}/status(id=${member.id})}" sec:authorize="hasRole('ADMIN')"><select aria-label="Membership status" name="status"><option th:each="status : ${statuses}" th:value="${status}" th:text="${status}" th:selected="${status == member.status}"></option></select><button class="button tiny ghost" type="submit">Update</button></form></td>
+        </tr><tr th:if="${#lists.isEmpty(members)}"><td class="empty" colspan="6">No members found. Add your first member to get started.</td></tr>
+        </tbody></table></div>
+    </section>
+</main>
+</body></html>

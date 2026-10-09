@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Sign in · Gym Portal</title><link rel="stylesheet" href="/css/portal.css"></head>
+<body class="login-page">
+<main class="login-card">
+    <div class="brand-mark">GP</div><p class="eyebrow">GYM MEMBERSHIP PORTAL</p>
+    <h1>Welcome back</h1><p class="muted">Sign in to manage your members.</p>
+    <div class="alert error" th:if="${param.error}">Invalid username or password.</div>
+    <div class="alert success" th:if="${param.logout}">You have been signed out.</div>
+    <form method="post" th:action="@{/login}">
+        <label for="username">Username</label><input id="username" name="username" autocomplete="username" required autofocus>
+        <label for="password">Password</label><input id="password" name="password" type="password" autocomplete="current-password" required>
+        <button class="button primary full" type="submit">Sign in</button>
+    </form>
+    <p class="hint">Ask your administrator for your account credentials.</p>
+</main>
+</body></html>
+

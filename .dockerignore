@@ -1,0 +1,9 @@
+.git
+.idea
+.vscode
+.env
+screenshots
+tests
+documentation
+source-code
+*.md

@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title th:text="${pageTitle} + ' · Gym Portal'">Member · Gym Portal</title><link rel="stylesheet" href="/css/portal.css"></head>
+<body><header class="topbar"><a class="brand" href="/"><span class="brand-mark small">GP</span><span>Gym Portal<small>MEMBERSHIP MANAGEMENT</small></span></a><a class="button ghost" href="/">← Back to dashboard</a></header>
+<main class="form-container"><div class="page-heading"><div><p class="eyebrow">MEMBER RECORD</p><h1 th:text="${pageTitle}">Register member</h1><p class="muted">Enter the member’s details below.</p></div></div>
+<form class="panel member-form" method="post" th:action="${formAction}" th:object="${member}">
+    <div class="form-grid"><div class="field"><label for="name">Full name</label><input id="name" th:field="*{name}" required maxlength="80"><span class="field-error" th:errors="*{name}"></span></div>
+    <div class="field"><label for="email">Email address</label><input id="email" type="email" th:field="*{email}" required maxlength="120"><span class="field-error" th:errors="*{email}"></span></div>
+    <div class="field"><label for="phone">Phone number</label><input id="phone" th:field="*{phone}" required placeholder="+91 98765 43210"><span class="field-error" th:errors="*{phone}"></span></div>
+    <div class="field"><label for="plan">Membership plan</label><select id="plan" th:field="*{plan}"><option th:each="plan : ${plans}" th:value="${plan}" th:text="${plan}"></option></select></div>
+    <div class="field"><label for="startDate">Start date</label><input id="startDate" name="startDate" type="date" th:value="${#temporals.format(member.startDate, 'yyyy-MM-dd')}" required></div>
+    <div class="field"><label for="endDate">End date</label><input id="endDate" name="endDate" type="date" th:value="${#temporals.format(member.endDate, 'yyyy-MM-dd')}" required></div>
+    <div class="field" sec:authorize="hasRole('ADMIN')"><label for="status">Status</label><select id="status" th:field="*{status}"><option th:each="status : ${statuses}" th:value="${status}" th:text="${status}"></option></select></div>
+    <input sec:authorize="!hasRole('ADMIN')" type="hidden" th:field="*{status}"></div>
+    <div class="form-actions"><a class="button secondary" href="/">Cancel</a><button class="button primary" type="submit" th:text="${pageTitle}">Save member</button></div>
+</form></main></body></html>
