@@ -21,13 +21,13 @@ pipeline {
                 sh '''
                     # Jenkins starts shell steps with xtrace enabled; disable it before reading secrets.
                     set +x
-                    set -a
-                    . /workspace/.env
-                    set +a
                     export PORTAL_BASE_URL=http://gym-portal:8080
                     export SELENIUM_REMOTE_URL=http://selenium:4444/wd/hub
                     docker compose --env-file /workspace/.env --profile e2e -f deployment/docker-compose.yml up -d --build mysql gym-portal selenium
                     trap 'docker compose --env-file /workspace/.env --profile e2e -f deployment/docker-compose.yml stop selenium' EXIT
+                    # Ask Compose to parse .env and capture only the browser-test credential.
+                    export GYM_ADMIN_PASSWORD="$(docker compose --env-file /workspace/.env -f deployment/docker-compose.yml config --environment | sed -n 's/^GYM_ADMIN_PASSWORD=//p')"
+                    test -n "$GYM_ADMIN_PASSWORD"
                     mvn -B -DrunSelenium=true -Dtest=MemberPortalSeleniumTest test
                 '''
             }
