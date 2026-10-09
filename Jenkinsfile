@@ -3,6 +3,7 @@ pipeline {
     options {
         timestamps()
         disableConcurrentBuilds()
+        skipDefaultCheckout(true)
     }
     environment {
         IMAGE_NAME = 'gym-membership-portal:ci'
