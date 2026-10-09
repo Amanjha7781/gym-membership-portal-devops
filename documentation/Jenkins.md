@@ -37,3 +37,11 @@ The Jenkinsfile runs checkout, Maven unit/integration tests, Selenium E2E in the
 ## Docker socket note
 
 Mounting `/var/run/docker.sock` gives Jenkins control over the Docker Desktop engine, equivalent to broad host-level control. Keep this lab instance local and do not expose it to untrusted jobs or networks. Jenkins is not published externally; port 8081 is for local lab use.
+
+## Jenkins verification attempt — 2026-10-09
+
+Build `#2` was aborted before the Selenium stage so the pipeline could be corrected to disable shell tracing before loading `/workspace/.env`. Build `#3` checked out commit `9ae8b5707b62f75fa6c8cfe356aaef603896c479` and completed `mvn -B clean verify`: 8 tests ran, 7 passed, 1 Selenium test was skipped by its opt-in setting, and there were 0 failures or errors. Jenkins recorded the Maven report.
+
+Build `#3` did **not** pass. The Selenium stage's Compose startup found the retained MySQL data volume, then the new app container failed database authentication (`Access denied for user 'gym_user'`). The current local `.env` root value also did not authenticate to that existing MySQL instance. The persistent volume `gym-membership-portal-mysql` remains present and was not reset. The app container is stopped after the failed attempt; MySQL remains healthy. Compose built the app image while preparing the Selenium stack, but the pipeline's separate Docker Build and Deploy stages were skipped, so there is no successful pipeline deployment or health-check result to report.
+
+To continue without losing existing database data, first restore `.env` values that match the credentials stored in the existing MySQL volume, or authorize a credential-recovery procedure that preserves that volume. No credentials were printed in the Jenkins console.
