@@ -37,7 +37,8 @@ pipeline {
             steps { sh 'docker build -t "$IMAGE_NAME" .' }
         }
         stage('Deploy') {
-            when { expression { env.BRANCH_NAME == 'main' || env.GIT_BRANCH == 'origin/main' } }
+            // A single-branch Pipeline job checks out a detached commit, so BRANCH_NAME may be unset.
+            when { expression { sh(returnStatus: true, script: "git branch -r --contains HEAD | grep -Eq '(^|/)main$'") == 0 } }
             steps {
                 sh 'docker compose --env-file /workspace/.env -f deployment/docker-compose.yml up -d --build'
             }
