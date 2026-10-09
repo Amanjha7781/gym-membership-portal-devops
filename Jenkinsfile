@@ -10,7 +10,15 @@ pipeline {
     }
     stages {
         stage('Checkout') {
-            steps { checkout scm }
+            steps {
+                checkout scm
+                script {
+                    env.CHECKED_OUT_MAIN = sh(
+                        returnStatus: true,
+                        script: 'git branch -r --contains HEAD | grep -Eq "^[[:space:]]*origin/main$"'
+                    ) == 0 ? 'true' : 'false'
+                }
+            }
         }
         stage('Build and Unit Tests') {
             steps { sh 'mvn -B clean verify' }
@@ -38,7 +46,7 @@ pipeline {
         }
         stage('Deploy') {
             // A single-branch Pipeline job checks out a detached commit, so BRANCH_NAME may be unset.
-            when { expression { sh(returnStatus: true, script: "git branch -r --contains HEAD | grep -Eq '(^|/)main$'") == 0 } }
+            when { expression { env.CHECKED_OUT_MAIN == 'true' } }
             steps {
                 sh 'docker compose --env-file /workspace/.env -f deployment/docker-compose.yml up -d --build'
             }
