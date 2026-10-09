@@ -30,7 +30,7 @@ The `.env` file must exist locally, remains ignored by Git, and is mounted read-
 
 ## Current run status
 
-The Jenkins service, `/workspace` mount, local Git visibility, Maven, and Docker engine connection were verified. The first job attempt (`#1`) stopped at checkout because the Git plugin's local-repository security guard was enabled. The local checkout property was then added to the Jenkins Compose configuration; rerun the job after restarting Jenkins to apply it. Do not claim a Jenkins build result until the job has completed successfully.
+The job `Gym-Membership-Portal-CI` is configured as a Pipeline from the local Git SCM (`file:///workspace`, branch `*/main`, script `Jenkinsfile`, no credentials). Build `#1` failed before tests because the Git plugin blocks local-file repositories by default. The scoped checkout property and exact Git system trust paths are now in the Jenkins image. After rebuilding Jenkins, `git ls-remote --heads file:///workspace main` succeeded, and Maven/Docker engine access were reverified. Jenkins home and the job configuration were preserved, but the container restart invalidated the browser session. Sign in to Jenkins again and trigger build `#2`; until that completes, there is no successful Jenkins result or Jenkins-driven deployment to report.
 
 The Jenkinsfile runs checkout, Maven unit/integration tests, Selenium E2E in the Compose profile, and a Docker image build. Deployment is guarded for `main`. Test reports are published even when a test stage fails.
 
