@@ -19,11 +19,13 @@ services:
       JAVA_OPTS: "-Djenkins.install.runSetupWizard=true -Dhudson.plugins.git.GitSCM.ALLOW_LOCAL_CHECKOUT=true"
       # The host-mounted repository is read-only and owned by the host user.
       # Trust only this exact source directory for local Git checkouts.
-      GIT_CONFIG_COUNT: "2"
+      GIT_CONFIG_COUNT: "3"
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: /workspace
       GIT_CONFIG_KEY_1: core.autocrlf
       GIT_CONFIG_VALUE_1: "true"
+      GIT_CONFIG_KEY_2: safe.directory
+      GIT_CONFIG_VALUE_2: /workspace/.git
     networks:
       - gym-project-network
 
