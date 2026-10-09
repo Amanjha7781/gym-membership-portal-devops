@@ -19,6 +19,8 @@ pipeline {
         stage('Selenium End-to-End') {
             steps {
                 sh '''
+                    # Jenkins starts shell steps with xtrace enabled; disable it before reading secrets.
+                    set +x
                     set -a
                     . /workspace/.env
                     set +a
