@@ -58,7 +58,7 @@ The Selenium flow covers login, member creation, search, edit, and admin status 
 
 ## Jenkins
 
-Jenkins is containerized separately and listens at <http://localhost:8081>. The local Pipeline job and its successful build `#7` are verified; see [Jenkins](documentation/Jenkins.md) for the run history. Start the Jenkins service with:
+Jenkins is containerized separately and listens at <http://localhost:8081>. Local Pipeline builds `#7` and `#8` have verified successful runs; see [Jenkins](documentation/Jenkins.md) for the run history. Start the Jenkins service with:
 
 ```powershell
 docker compose -f deployment/jenkins/compose.yml up -d --build
@@ -77,4 +77,4 @@ Pipeline code is in [Jenkinsfile](Jenkinsfile). It runs Maven verification, the 
 - `deployment/scripts` — Windows PowerShell start/stop/status/restart helpers.
 - `documentation` — architecture, API, database, tests, Docker, Jenkins, workflow, deployment, and final report.
 
-See [Deployment](documentation/Deployment.md) for exact commands, the [Evidence index](documentation/Evidence_Index.md) for task-by-task status and proof, and the [Evidence checklist](documentation/Evidence_Checklist.md) for genuine screenshots still to capture. Local database persistence through an app-container restart is verified. Task 4 remains partial because no GitHub remote is configured; Task 15 remains partial because Jenkins requires interactive sign-in for a fresh build and some evidence is still missing.
+See [Deployment](documentation/Deployment.md) for exact commands, the [Evidence index](documentation/Evidence_Index.md) for task-by-task status and proof, and the [Evidence checklist](documentation/Evidence_Checklist.md) for remaining submission evidence. Local database persistence through an app-container restart and Jenkins build #8 are verified. Screenshots for its stages/tests and Docker container list are present. Task 4 remains partial because no GitHub remote is configured; Task 15 remains partial pending the student's final review and any GitHub setup required by the assignment.

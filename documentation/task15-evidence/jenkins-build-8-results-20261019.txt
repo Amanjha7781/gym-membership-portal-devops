@@ -1,0 +1,29 @@
+Jenkins Build #8 Verification — 2026-10-19
+Project: Gym Membership Portal
+Job: Gym-Membership-Portal-CI
+Build: #8 — SUCCESS (1m 58s)
+Authenticated session: confirmed in the Jenkins browser as aman jha (amanadmin).
+Pre-trigger check: build queue empty; Jenkins reported 0/2 executors busy.
+Checked-out repository: file:///workspace, refs/remotes/origin/main
+Commit: b98d762bfe621fb263c2a37e1efac47a2c06c34a
+
+Pipeline stages observed in Jenkins Pipeline Overview:
+- Checkout: SUCCESS.
+- Build and Unit Tests: SUCCESS; `mvn -B clean verify`; 8 tests, 7 passed, 0 failed, 1 skipped (the opt-in Selenium test in this normal Maven pass).
+- Selenium End-to-End: SUCCESS; `MemberPortalSeleniumTest.loginCreateSearchUpdateAndChangeStatus` passed (1 run, 0 failures/errors/skips; 14.62 s).
+- Docker Build: SUCCESS; image gym-membership-portal:ci built.
+- Deploy: SUCCESS; Compose completed for the local deployment.
+- Jenkins final result: SUCCESS (`Finished: SUCCESS`).
+
+Jenkins aggregate test report: 9 total, 8 passed, 0 failed, 1 skipped. The two Selenium test-result entries show one skipped normal Maven invocation and one successful dedicated end-to-end invocation.
+
+Deployment verification after the build:
+- deployment-gym-portal-1: running, Docker health healthy, image gym-membership-portal:1.0.0.
+- deployment-mysql-1: running, Docker health healthy; container was not reset.
+- Application container image ID: sha256:11294f387c4c53985ae50a3f611fb1f1988623bc399c1cf57f061a916e6a461d.
+- Local gym-membership-portal:1.0.0 image ID: same; image_match=True.
+- GET http://localhost:8080/actuator/health returned HTTP 200 and status UP.
+
+Console was inspected in full from the authenticated Jenkins console endpoint. The secret-handling command disabled shell tracing before resolving the local Compose credential; no .env values or credential values were visible in the console output inspected. Docker reported the optional buildx plugin was unavailable and used the classic builder; image build and deployment succeeded.
+
+Evidence update from the final audit: persistent screenshots `screenshots/jenkins-build-8-stages.png` and `screenshots/jenkins-build-8-test-results.png` are now present and readable. No separate build-summary image or full console text export is saved. The authenticated Jenkins build #8 status page was rechecked and showed `SUCCESS`, revision `b98d762bfe621fb263c2a37e1efac47a2c06c34a`, and no test failures.

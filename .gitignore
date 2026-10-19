@@ -14,6 +14,9 @@ screenshots/*
 !screenshots/task15-member-registration.png
 !screenshots/task15-member-edit-form.png
 !screenshots/task15-member-workflow.png
+!screenshots/docker-containers.png
+!screenshots/jenkins-build-8-stages.png
+!screenshots/jenkins-build-8-test-results.png
 logs/
 *.log
 !deployment/ansible/logs/
