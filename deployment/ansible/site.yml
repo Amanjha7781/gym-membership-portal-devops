@@ -1,0 +1,197 @@
+---
+# Configure the already-existing local Docker Compose deployment. This play
+# deliberately never removes containers, networks, images, or named volumes.
+- name: Configure the local Gym Membership Portal Docker environment
+  hosts: gym_portal_local
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_root: /workspace
+    compose_file: /workspace/deployment/docker-compose.yml
+    environment_file: /workspace/.env
+
+  tasks:
+    - name: Confirm Docker CLI can reach the Docker Desktop daemon
+      ansible.builtin.command:
+        argv:
+          - docker
+          - info
+      changed_when: false
+      # `docker info` can include proxy metadata. Do not put that output in logs.
+      no_log: true
+
+    - name: Confirm Docker daemon is available
+      ansible.builtin.debug:
+        msg: Docker CLI connected to the Docker Desktop daemon.
+
+    - name: Inspect required local project files without reading configuration values
+      ansible.builtin.stat:
+        path: "{{ item }}"
+        get_checksum: false
+        get_mime: false
+        get_attributes: false
+      loop:
+        - "{{ compose_file }}"
+        - "{{ environment_file }}"
+        - "{{ project_root }}/Dockerfile"
+      loop_control:
+        label: "{{ item | basename }}"
+      register: project_file_checks
+
+    - name: Require Compose, local environment file, and application Dockerfile
+      ansible.builtin.assert:
+        that:
+          - >-
+            (project_file_checks.results
+              | selectattr('stat.exists', 'equalto', true)
+              | selectattr('stat.isreg', 'equalto', true)
+              | list | length) == 3
+        fail_msg: One or more required project files are missing or not regular files.
+        success_msg: Required project files exist; file contents and metadata are not logged.
+
+    - name: Validate Compose syntax and required environment variable references
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - config
+          - --quiet
+      args:
+        chdir: "{{ project_root }}"
+      changed_when: false
+
+    - name: Verify the existing persistent MySQL volume is present
+      ansible.builtin.command:
+        argv:
+          - docker
+          - volume
+          - inspect
+          - gym-membership-portal-mysql
+      changed_when: false
+      # Volume metadata is not needed in the play output.
+      no_log: true
+
+    - name: Query current Compose service state
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - ps
+          - --all
+          - --format
+          - json
+      args:
+        chdir: "{{ project_root }}"
+      register: compose_state_before
+      changed_when: false
+
+    - name: Determine whether the application and database are already healthy
+      ansible.builtin.set_fact:
+        portal_stack_healthy: >-
+          {{
+            (compose_state_before.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'mysql')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+            and
+            (compose_state_before.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'gym-portal')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+          }}
+
+    - name: Leave the already-healthy deployment untouched
+      ansible.builtin.debug:
+        msg: >-
+          MySQL and Gym Portal are already running and healthy; no Compose
+          restart or rebuild is needed.
+      when: portal_stack_healthy
+
+    - name: Start or reconcile app and database containers if either is unhealthy
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - up
+          - -d
+          - --no-build
+          - mysql
+          - gym-portal
+      args:
+        chdir: "{{ project_root }}"
+      when: not portal_stack_healthy
+      register: compose_reconcile
+      changed_when: true
+
+    - name: Wait for the application health endpoint
+      ansible.builtin.uri:
+        # The runner is its own container; host.docker.internal reaches the
+        # published app port from Docker Desktop on Windows.
+        url: http://host.docker.internal:8080/actuator/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: portal_health
+      until:
+        - portal_health.status == 200
+        - (portal_health.json.status | default('')) == 'UP'
+      retries: 30
+      delay: 5
+
+    - name: Confirm MySQL and application remain healthy after configuration
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - ps
+          - --all
+          - --format
+          - json
+      args:
+        chdir: "{{ project_root }}"
+      register: compose_state_after
+      changed_when: false
+
+    - name: Assert required Compose services are healthy
+      ansible.builtin.assert:
+        that:
+          - >-
+            (compose_state_after.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'mysql')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+          - >-
+            (compose_state_after.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'gym-portal')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+          - portal_health.status == 200
+          - (portal_health.json.status | default('')) == 'UP'
+        success_msg: >-
+          MySQL and Gym Portal are healthy; the application health endpoint
+          returned HTTP 200 with status UP.

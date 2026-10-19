@@ -1,0 +1,524 @@
+[2026-10-09 22:38:58] Task 14 controlled provisioning, recovery, and rollback validation started.
+[2026-10-09 22:38:58] COMMAND: docker info --format {{.ServerVersion}}
+29.8.0
+[2026-10-09 22:38:58] RESULT: Docker daemon availability (exit=0)
+[2026-10-09 22:38:58] Docker daemon server version: 29.8.0
+[2026-10-09 22:38:58] COMMAND: docker image inspect --format {{.Id}} gym-portal-ansible:local
+sha256:7f4e7f9d7e3edee7e050a02aac4a388a35e7a280cbbd5dd24bb51b8e6216aab0
+[2026-10-09 22:38:59] RESULT: Build Ansible runner if absent (exit=0)
+[2026-10-09 22:38:59] COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml config --quiet
+[2026-10-09 22:38:59] RESULT: Compose configuration preflight (exit=0)
+[2026-10-09 22:38:59] COMMAND: docker run --rm --mount type=bind,source=C:\Users\Divya\OneDrive\Desktop\Gym-Membership-Portal,target=/workspace --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock --workdir /workspace/deployment/ansible --env ANSIBLE_NOCOLOR=1 gym-portal-ansible:local -i inventory.ini provision.yml
+
+PLAY [Provision and validate the local Gym Membership Portal runtime] **********
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Inspect required files without collecting checksums or file contents] ****
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, environment file, and application Dockerfile] ***********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required deployment files are present; their contents are not logged."
+}
+
+TASK [Validate Docker Compose configuration without rendering environment values] ***
+ok: [localhost]
+
+TASK [Read the checked-in Compose YAML structure for dependency assertions] ****
+ok: [localhost]
+
+TASK [Assert the app waits for MySQL and the expected persistent volume is configured] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App dependency and persistent MySQL volume configuration are correct."
+}
+
+TASK [Verify the existing MySQL volume exists without displaying its metadata] ***
+ok: [localhost]
+
+TASK [Query current Compose container state] ***********************************
+ok: [localhost]
+
+TASK [Determine whether MySQL is running and healthy] **************************
+ok: [localhost]
+
+TASK [Refuse to change the app if MySQL is not healthy] ************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL is running and healthy; provisioning may proceed without changing it."
+}
+
+TASK [Capture the current MySQL container ID] **********************************
+ok: [localhost]
+
+TASK [Inspect MySQL mounts without exposing container environment variables] ***
+ok: [localhost]
+
+TASK [Check that the retained volume is mounted on MySQL data directory] *******
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Existing MySQL data volume is mounted at /var/lib/mysql."
+}
+
+TASK [Determine whether the app is already running and healthy] ****************
+ok: [localhost]
+
+TASK [Verify current app endpoint before taking a rollback snapshot] ***********
+ok: [localhost]
+
+TASK [Locate the healthy app container] ****************************************
+ok: [localhost]
+
+TASK [Read app image identity without logging its runtime environment] *********
+ok: [localhost]
+
+TASK [Record current healthy application image ID] *****************************
+ok: [localhost]
+
+TASK [Inspect existing rollback image tag without printing metadata] ***********
+ok: [localhost]
+
+TASK [Read existing rollback image ID when the tag is already present] *********
+ok: [localhost]
+
+TASK [Save the healthy image as the Task 14 rollback target] *******************
+skipping: [localhost]
+
+TASK [Confirm known-good image tag is saved] ***********************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Healthy image sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 is saved as gym-membership-portal:task14-last-known-good."
+}
+
+TASK [Leave an already-healthy app service untouched] **************************
+ok: [localhost] => {
+    "msg": "App and MySQL are already healthy; provisioning makes no service changes."
+}
+
+TASK [Start only the app service when it is absent, stopped, or unhealthy] *****
+skipping: [localhost]
+
+TASK [Wait for the application health endpoint] ********************************
+ok: [localhost]
+
+TASK [Query final Compose service state] ***************************************
+ok: [localhost]
+
+TASK [Query final MySQL container ID] ******************************************
+ok: [localhost]
+
+TASK [Assert app health, MySQL health, and unchanged MySQL container identity] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App and MySQL are healthy; the original MySQL container remains unchanged."
+}
+
+TASK [Confirm the MySQL persistent-volume mount still exists] ******************
+ok: [localhost]
+
+TASK [Assert the existing database volume remains mounted] *********************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "The existing MySQL data volume remains mounted at /var/lib/mysql."
+}
+
+TASK [Report successful provisioning and reliability checks] *******************
+ok: [localhost] => {
+    "msg": "Provisioning succeeded; MySQL stayed healthy and unchanged, and the app health endpoint returned HTTP 200 with status UP."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=29   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
+
+[2026-10-09 22:39:09] RESULT: Ansible provision.yml (exit=0)
+[2026-10-09 22:39:09] HEALTH: HTTP 200, status=UP, attempt=1
+[2026-10-09 22:39:09] COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml ps -q mysql
+176128505f8de0c3c92456caeb64801d36aceef0e510311e55a0c2a45dbde13a
+[2026-10-09 22:39:10] RESULT: Get mysql container ID (exit=0)
+[2026-10-09 22:39:10] COMMAND: docker run --rm --mount type=bind,source=C:\Users\Divya\OneDrive\Desktop\Gym-Membership-Portal,target=/workspace --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock --workdir /workspace/deployment/ansible --env ANSIBLE_NOCOLOR=1 gym-portal-ansible:local -i inventory.ini snapshot.yml
+
+PLAY [Save a known-good Gym Membership Portal image] ***************************
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Inspect required files without collecting checksums or file contents] ****
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, environment file, and application Dockerfile] ***********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required deployment files are present; their contents are not logged."
+}
+
+TASK [Validate Docker Compose configuration without rendering environment values] ***
+ok: [localhost]
+
+TASK [Read the checked-in Compose YAML structure for dependency assertions] ****
+ok: [localhost]
+
+TASK [Assert the app waits for MySQL and the expected persistent volume is configured] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App dependency and persistent MySQL volume configuration are correct."
+}
+
+TASK [Verify the existing MySQL volume exists without displaying its metadata] ***
+ok: [localhost]
+
+TASK [Query current Compose container state] ***********************************
+ok: [localhost]
+
+TASK [Determine whether MySQL is running and healthy] **************************
+ok: [localhost]
+
+TASK [Refuse to change the app if MySQL is not healthy] ************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL is running and healthy; provisioning may proceed without changing it."
+}
+
+TASK [Capture the current MySQL container ID] **********************************
+ok: [localhost]
+
+TASK [Inspect MySQL mounts without exposing container environment variables] ***
+ok: [localhost]
+
+TASK [Check that the retained volume is mounted on MySQL data directory] *******
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Existing MySQL data volume is mounted at /var/lib/mysql."
+}
+
+TASK [Require app container to be running and healthy before snapshot] *********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "All assertions passed"
+}
+
+TASK [Verify app HTTP health before snapshot] **********************************
+ok: [localhost]
+
+TASK [Locate the healthy app container] ****************************************
+ok: [localhost]
+
+TASK [Read app image identity without logging its runtime environment] *********
+ok: [localhost]
+
+TASK [Record current healthy application image ID] *****************************
+ok: [localhost]
+
+TASK [Inspect existing rollback image tag without printing metadata] ***********
+ok: [localhost]
+
+TASK [Read existing rollback image ID when the tag is already present] *********
+ok: [localhost]
+
+TASK [Save the healthy image as the Task 14 rollback target] *******************
+skipping: [localhost]
+
+TASK [Confirm known-good image tag is saved] ***********************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Healthy image sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 is saved as gym-membership-portal:task14-last-known-good."
+}
+
+TASK [Query final Compose service state] ***************************************
+ok: [localhost]
+
+TASK [Query final MySQL container ID] ******************************************
+ok: [localhost]
+
+TASK [Assert app health, MySQL health, and unchanged MySQL container identity] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App and MySQL are healthy; the original MySQL container remains unchanged."
+}
+
+TASK [Confirm the MySQL persistent-volume mount still exists] ******************
+ok: [localhost]
+
+TASK [Assert the existing database volume remains mounted] *********************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "The existing MySQL data volume remains mounted at /var/lib/mysql."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=26   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0
+
+[2026-10-09 22:39:18] RESULT: Ansible snapshot.yml (exit=0)
+[2026-10-09 22:39:18] COMMAND: docker image inspect --format {{.Id}} gym-membership-portal:task14-last-known-good
+sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53
+[2026-10-09 22:39:18] RESULT: Read saved known-good image ID (exit=0)
+[2026-10-09 22:39:18] COMMAND: docker image inspect --format {{.Id}} gym-membership-portal:1.0.0
+sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53
+[2026-10-09 22:39:19] RESULT: Read configured application image ID (exit=0)
+[2026-10-09 22:39:19] COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml stop gym-portal
+ Container deployment-gym-portal-1 Stopping
+ Container deployment-gym-portal-1 Stopped
+[2026-10-09 22:39:21] RESULT: Stop only the Gym Portal app service for recovery test (exit=0)
+[2026-10-09 22:39:21] COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml ps -q mysql
+176128505f8de0c3c92456caeb64801d36aceef0e510311e55a0c2a45dbde13a
+[2026-10-09 22:39:21] RESULT: Get mysql container ID (exit=0)
+[2026-10-09 22:39:21] COMMAND: docker run --rm --mount type=bind,source=C:\Users\Divya\OneDrive\Desktop\Gym-Membership-Portal,target=/workspace --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock --workdir /workspace/deployment/ansible --env ANSIBLE_NOCOLOR=1 gym-portal-ansible:local -i inventory.ini provision.yml
+
+PLAY [Provision and validate the local Gym Membership Portal runtime] **********
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Inspect required files without collecting checksums or file contents] ****
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, environment file, and application Dockerfile] ***********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required deployment files are present; their contents are not logged."
+}
+
+TASK [Validate Docker Compose configuration without rendering environment values] ***
+ok: [localhost]
+
+TASK [Read the checked-in Compose YAML structure for dependency assertions] ****
+ok: [localhost]
+
+TASK [Assert the app waits for MySQL and the expected persistent volume is configured] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App dependency and persistent MySQL volume configuration are correct."
+}
+
+TASK [Verify the existing MySQL volume exists without displaying its metadata] ***
+ok: [localhost]
+
+TASK [Query current Compose container state] ***********************************
+ok: [localhost]
+
+TASK [Determine whether MySQL is running and healthy] **************************
+ok: [localhost]
+
+TASK [Refuse to change the app if MySQL is not healthy] ************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL is running and healthy; provisioning may proceed without changing it."
+}
+
+TASK [Capture the current MySQL container ID] **********************************
+ok: [localhost]
+
+TASK [Inspect MySQL mounts without exposing container environment variables] ***
+ok: [localhost]
+
+TASK [Check that the retained volume is mounted on MySQL data directory] *******
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Existing MySQL data volume is mounted at /var/lib/mysql."
+}
+
+TASK [Determine whether the app is already running and healthy] ****************
+ok: [localhost]
+
+TASK [Verify current app endpoint before taking a rollback snapshot] ***********
+skipping: [localhost]
+
+TASK [Locate the healthy app container] ****************************************
+skipping: [localhost]
+
+TASK [Read app image identity without logging its runtime environment] *********
+skipping: [localhost]
+
+TASK [Record current healthy application image ID] *****************************
+skipping: [localhost]
+
+TASK [Inspect existing rollback image tag without printing metadata] ***********
+skipping: [localhost]
+
+TASK [Read existing rollback image ID when the tag is already present] *********
+skipping: [localhost]
+
+TASK [Save the healthy image as the Task 14 rollback target] *******************
+skipping: [localhost]
+
+TASK [Confirm known-good image tag is saved] ***********************************
+skipping: [localhost]
+
+TASK [Leave an already-healthy app service untouched] **************************
+skipping: [localhost]
+
+TASK [Start only the app service when it is absent, stopped, or unhealthy] *****
+changed: [localhost]
+
+TASK [Wait for the application health endpoint] ********************************
+FAILED - RETRYING: [localhost]: Wait for the application health endpoint (30 retries left).
+FAILED - RETRYING: [localhost]: Wait for the application health endpoint (29 retries left).
+FAILED - RETRYING: [localhost]: Wait for the application health endpoint (28 retries left).
+ok: [localhost]
+
+TASK [Query final Compose service state] ***************************************
+ok: [localhost]
+
+TASK [Query final MySQL container ID] ******************************************
+ok: [localhost]
+
+TASK [Assert app health, MySQL health, and unchanged MySQL container identity] ***
+[ERROR]: Task failed: Action failed: Final app/MySQL health or MySQL container identity check failed.
+Origin: /workspace/deployment/ansible/tasks/final-health-check.yml:37:3
+
+35   changed_when: false
+36
+37 - name: Assert app health, MySQL health, and unchanged MySQL container identity
+     ^ column 3
+
+fatal: [localhost]: FAILED! => {
+    "assertion": "(compose_state_after.stdout_lines\n  | map('from_json')\n  | selectattr('Service', 'equalto', 'gym-portal')\n  | selectattr('State', 'equalto', 'running')\n  | selectattr('Health', 'equalto', 'healthy')\n  | list | length == 1)",
+    "changed": false,
+    "evaluated_to": false,
+    "msg": "Final app/MySQL health or MySQL container identity check failed."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=18   changed=1    unreachable=0    failed=1    skipped=9    rescued=0    ignored=0
+
+[2026-10-09 22:39:50] RESULT: Ansible provision.yml (exit=2)
+[2026-10-09 22:39:50] VALIDATION ERROR: Docker command failed: Ansible provision.yml (exit=2).
+[2026-10-09 22:39:50] SAFETY RECOVERY: provisioning app service after an interrupted recovery test.
+[2026-10-09 22:39:50] COMMAND: docker run --rm --mount type=bind,source=C:\Users\Divya\OneDrive\Desktop\Gym-Membership-Portal,target=/workspace --mount type=bind,source=/var/run/docker.sock,target=/var/run/docker.sock --workdir /workspace/deployment/ansible --env ANSIBLE_NOCOLOR=1 gym-portal-ansible:local -i inventory.ini provision.yml
+
+PLAY [Provision and validate the local Gym Membership Portal runtime] **********
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Inspect required files without collecting checksums or file contents] ****
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, environment file, and application Dockerfile] ***********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required deployment files are present; their contents are not logged."
+}
+
+TASK [Validate Docker Compose configuration without rendering environment values] ***
+ok: [localhost]
+
+TASK [Read the checked-in Compose YAML structure for dependency assertions] ****
+ok: [localhost]
+
+TASK [Assert the app waits for MySQL and the expected persistent volume is configured] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App dependency and persistent MySQL volume configuration are correct."
+}
+
+TASK [Verify the existing MySQL volume exists without displaying its metadata] ***
+ok: [localhost]
+
+TASK [Query current Compose container state] ***********************************
+ok: [localhost]
+
+TASK [Determine whether MySQL is running and healthy] **************************
+ok: [localhost]
+
+TASK [Refuse to change the app if MySQL is not healthy] ************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL is running and healthy; provisioning may proceed without changing it."
+}
+
+TASK [Capture the current MySQL container ID] **********************************
+ok: [localhost]
+
+TASK [Inspect MySQL mounts without exposing container environment variables] ***
+ok: [localhost]
+
+TASK [Check that the retained volume is mounted on MySQL data directory] *******
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Existing MySQL data volume is mounted at /var/lib/mysql."
+}
+
+TASK [Determine whether the app is already running and healthy] ****************
+ok: [localhost]
+
+TASK [Verify current app endpoint before taking a rollback snapshot] ***********
+ok: [localhost]
+
+TASK [Locate the healthy app container] ****************************************
+ok: [localhost]
+
+TASK [Read app image identity without logging its runtime environment] *********
+ok: [localhost]
+
+TASK [Record current healthy application image ID] *****************************
+ok: [localhost]
+
+TASK [Inspect existing rollback image tag without printing metadata] ***********
+ok: [localhost]
+
+TASK [Read existing rollback image ID when the tag is already present] *********
+ok: [localhost]
+
+TASK [Save the healthy image as the Task 14 rollback target] *******************
+skipping: [localhost]
+
+TASK [Confirm known-good image tag is saved] ***********************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Healthy image sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 is saved as gym-membership-portal:task14-last-known-good."
+}
+
+TASK [Leave an already-healthy app service untouched] **************************
+ok: [localhost] => {
+    "msg": "App and MySQL are already healthy; provisioning makes no service changes."
+}
+
+TASK [Start only the app service when it is absent, stopped, or unhealthy] *****
+skipping: [localhost]
+
+TASK [Wait for the application health endpoint] ********************************
+ok: [localhost]
+
+TASK [Query final Compose service state] ***************************************
+ok: [localhost]
+
+TASK [Query final MySQL container ID] ******************************************
+ok: [localhost]
+
+TASK [Assert app health, MySQL health, and unchanged MySQL container identity] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App and MySQL are healthy; the original MySQL container remains unchanged."
+}
+
+TASK [Confirm the MySQL persistent-volume mount still exists] ******************
+ok: [localhost]
+
+TASK [Assert the existing database volume remains mounted] *********************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "The existing MySQL data volume remains mounted at /var/lib/mysql."
+}
+
+TASK [Report successful provisioning and reliability checks] *******************
+ok: [localhost] => {
+    "msg": "Provisioning succeeded; MySQL stayed healthy and unchanged, and the app health endpoint returned HTTP 200 with status UP."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=29   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0
+
+[2026-10-09 22:39:59] RESULT: Ansible provision.yml (exit=0)
+[2026-10-09 22:39:59] HEALTH: HTTP 200, status=UP, attempt=1
+[2026-10-09 22:39:59] APP SERVICE SAFETY RECOVERY PASSED.

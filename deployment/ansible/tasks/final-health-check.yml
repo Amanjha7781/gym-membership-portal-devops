@@ -1,0 +1,93 @@
+---
+- name: Query final Compose service state
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - ps
+      - --all
+      - --format
+      - json
+  args:
+    chdir: "{{ project_root }}"
+  register: compose_state_after
+  changed_when: false
+  until:
+    - >-
+      (compose_state_after.stdout_lines
+        | map('from_json')
+        | selectattr('Service', 'equalto', 'mysql')
+        | selectattr('State', 'equalto', 'running')
+        | selectattr('Health', 'equalto', 'healthy')
+        | list | length == 1)
+    - >-
+      (compose_state_after.stdout_lines
+        | map('from_json')
+        | selectattr('Service', 'equalto', 'gym-portal')
+        | selectattr('State', 'equalto', 'running')
+        | selectattr('Health', 'equalto', 'healthy')
+        | list | length == 1)
+  retries: 30
+  delay: 5
+
+- name: Query final MySQL container ID
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - ps
+      - -q
+      - mysql
+  args:
+    chdir: "{{ project_root }}"
+  register: mysql_container_after
+  changed_when: false
+
+- name: Assert app health, MySQL health, and unchanged MySQL container identity
+  ansible.builtin.assert:
+    that:
+      - >-
+        (compose_state_after.stdout_lines
+          | map('from_json')
+          | selectattr('Service', 'equalto', 'mysql')
+          | selectattr('State', 'equalto', 'running')
+          | selectattr('Health', 'equalto', 'healthy')
+          | list | length == 1)
+      - >-
+        (compose_state_after.stdout_lines
+          | map('from_json')
+          | selectattr('Service', 'equalto', 'gym-portal')
+          | selectattr('State', 'equalto', 'running')
+          | selectattr('Health', 'equalto', 'healthy')
+          | list | length == 1)
+      - mysql_container_after.stdout | trim == mysql_container_before.stdout | trim
+    fail_msg: Final app/MySQL health or MySQL container identity check failed.
+    success_msg: App and MySQL are healthy; the original MySQL container remains unchanged.
+
+- name: Confirm the MySQL persistent-volume mount still exists
+  ansible.builtin.command:
+    argv:
+      - docker
+      - inspect
+      - "{{ mysql_container_after.stdout | trim }}"
+  register: final_mysql_inspect
+  changed_when: false
+  no_log: true
+
+- name: Assert the existing database volume remains mounted
+  ansible.builtin.assert:
+    that:
+      - >-
+        (((final_mysql_inspect.stdout | from_json | first).Mounts
+          | selectattr('Name', 'equalto', 'gym-membership-portal-mysql')
+          | selectattr('Destination', 'equalto', '/var/lib/mysql')
+          | list | length) == 1)
+    success_msg: The existing MySQL data volume remains mounted at /var/lib/mysql.

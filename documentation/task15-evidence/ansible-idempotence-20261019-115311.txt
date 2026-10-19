@@ -1,0 +1,125 @@
+
+PLAY [Provision and validate the local Gym Membership Portal runtime] **********
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Inspect required files without collecting checksums or file contents] ****
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, environment file, and application Dockerfile] ***********
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required deployment files are present; their contents are not logged."
+}
+
+TASK [Validate Docker Compose configuration without rendering environment values] ***
+ok: [localhost]
+
+TASK [Read the checked-in Compose YAML structure for dependency assertions] ****
+ok: [localhost]
+
+TASK [Assert the app waits for MySQL and the expected persistent volume is configured] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App dependency and persistent MySQL volume configuration are correct."
+}
+
+TASK [Verify the existing MySQL volume exists without displaying its metadata] ***
+ok: [localhost]
+
+TASK [Query current Compose container state] ***********************************
+ok: [localhost]
+
+TASK [Determine whether MySQL is running and healthy] **************************
+ok: [localhost]
+
+TASK [Refuse to change the app if MySQL is not healthy] ************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL is running and healthy; provisioning may proceed without changing it."
+}
+
+TASK [Capture the current MySQL container ID] **********************************
+ok: [localhost]
+
+TASK [Inspect MySQL mounts without exposing container environment variables] ***
+ok: [localhost]
+
+TASK [Check that the retained volume is mounted on MySQL data directory] *******
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Existing MySQL data volume is mounted at /var/lib/mysql."
+}
+
+TASK [Determine whether the app is already running and healthy] ****************
+ok: [localhost]
+
+TASK [Verify current app endpoint before taking a rollback snapshot] ***********
+ok: [localhost]
+
+TASK [Locate the healthy app container] ****************************************
+ok: [localhost]
+
+TASK [Read app image identity without logging its runtime environment] *********
+ok: [localhost]
+
+TASK [Record current healthy application image ID] *****************************
+ok: [localhost]
+
+TASK [Inspect existing rollback image tag without printing metadata] ***********
+ok: [localhost]
+
+TASK [Read existing rollback image ID when the tag is already present] *********
+ok: [localhost]
+
+TASK [Save the healthy image as the Task 14 rollback target] *******************
+skipping: [localhost]
+
+TASK [Confirm known-good image tag is saved] ***********************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Healthy image sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 is saved as gym-membership-portal:task14-last-known-good."
+}
+
+TASK [Leave an already-healthy app service untouched] **************************
+ok: [localhost] => {
+    "msg": "App and MySQL are already healthy; provisioning makes no service changes."
+}
+
+TASK [Start only the app service when it is absent, stopped, or unhealthy] *****
+skipping: [localhost]
+
+TASK [Wait for the application health endpoint] ********************************
+ok: [localhost]
+
+TASK [Query final Compose service state] ***************************************
+ok: [localhost]
+
+TASK [Query final MySQL container ID] ******************************************
+ok: [localhost]
+
+TASK [Assert app health, MySQL health, and unchanged MySQL container identity] ***
+ok: [localhost] => {
+    "changed": false,
+    "msg": "App and MySQL are healthy; the original MySQL container remains unchanged."
+}
+
+TASK [Confirm the MySQL persistent-volume mount still exists] ******************
+ok: [localhost]
+
+TASK [Assert the existing database volume remains mounted] *********************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "The existing MySQL data volume remains mounted at /var/lib/mysql."
+}
+
+TASK [Report successful provisioning and reliability checks] *******************
+ok: [localhost] => {
+    "msg": "Provisioning succeeded; MySQL stayed healthy and unchanged, and the app health endpoint returned HTTP 200 with status UP."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=29   changed=0    unreachable=0    failed=0    skipped=2    rescued=0    ignored=0

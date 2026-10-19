@@ -148,20 +148,34 @@ REVIEW
    ↓
 DONE
 
-## 7. Implementation Mapping and Verification
+## 7. Implementation Mapping and Verified Status
 
-| Task | Project artifact or evidence |
-|---|---|
-| 1. Problem definition and scope | `Project_Definition.md` |
-| 2. Agile planning and workflow | This document and `documentation/CI_CD_Workflow.md` |
-| 3. Requirements and architecture | `Requirements_Architecture.md`, `Architecture.md`, `Database.md`, `API_Documentation.md` |
-| 4. Git/GitHub setup | Local Git repository and `.gitignore`; GitHub remote requires account authentication and repository choice |
-| 5–6. Application features | Spring Boot MVC/API, Thymeleaf screens, service, JPA repository, Spring Security |
-| 7–8. Jenkins CI/deployment | `Jenkinsfile`, `deployment/jenkins/`; Jenkins first-run setup and a build remain to be performed |
-| 9–10. Selenium and continuous testing | Opt-in `MemberPortalSeleniumTest` and Jenkins pipeline stage |
-| 11–12. Docker lifecycle and delivery | `Dockerfile`, `deployment/docker-compose.yml`, Jenkins Docker stages |
-| 13. Configuration management | Environment variables, ignored `.env`, and `.env.example` |
-| 14. Provisioning/reliability | Docker Compose health checks, persistent named volume, and scripts in `deployment/scripts/` |
-| 15. Integration and documentation | README, architecture/database/API/testing/deployment docs, final report, evidence checklist |
+See [`Evidence_Index.md`](Evidence_Index.md) for the full assignment-by-assignment evidence and the exact validation records. Current status is:
 
-Local JUnit and browser tests plus a Dockerized MySQL/app run were exercised during implementation. Jenkins job execution and GitHub remote setup are not marked done until verified.
+| Task | Status | Evidence / remaining item |
+|---|---|---|
+| 1. Problem definition and scope | COMPLETE | `Project_Definition.md`. |
+| 2. Agile planning and workflow | COMPLETE | This plan and `CI_CD_Workflow.md`. |
+| 3. Requirements and architecture | COMPLETE | Requirements, architecture, database, and API documentation plus `src/`. |
+| 4. Git and GitHub setup | PARTIAL | Local Git repository and meaningful commit history exist; `git remote -v` is empty. GitHub setup needs the student's account and repository choice. |
+| 5. First feature development | COMPLETE | Member creation implemented and covered by integration/browser tests. |
+| 6. Complete MVP | COMPLETE | Member management, search, status, dashboard, authentication, and persistence implemented; automated suite passed. |
+| 7. Jenkins installation and CI | COMPLETE | Local Jenkins job build #7 finished `SUCCESS` in the Jenkins UI. |
+| 8. Jenkinsfile and deployment | COMPLETE | Build #7 executed pipeline deployment; app health was HTTP 200 / `UP`. |
+| 9. Selenium design | COMPLETE | Selenium test source exists; build #7 Selenium stage passed 1 test. |
+| 10. Continuous testing | COMPLETE | Jenkins #7 reports Maven tests and Selenium result. |
+| 11. Docker image and container lifecycle | COMPLETE | Docker Compose app/MySQL containers and image were verified healthy. A real MySQL-backed fixture remained present after an app-only container restart; the MySQL container and named volume were unchanged. No MySQL container restart was performed. |
+| 12. Jenkins-Docker delivery | COMPLETE | Jenkins #7 Docker build and Compose deploy stages passed. |
+| 13. Configuration management | COMPLETE | Corrected Ansible run and repeatability logs passed; initial failed attempt is retained as such. |
+| 14. Automated provisioning and reliability | COMPLETE | Task 14 app recovery, known-good image rollback, health, volume preservation, and idempotence passed. |
+| 15. Final evidence and submission preparation | PARTIAL | Final report/index/checklist, fresh Maven/Selenium/Ansible logs, and seven genuine screenshots are present. A current authenticated Jenkins build and Docker/Jenkins stage screenshots remain unavailable; the user must sign in to Jenkins. GitHub remote and final submission review remain. |
+
+### Task 13 — Configuration management verification
+
+The Ansible playbook in `deployment/ansible/` targets the local Docker Desktop engine through a disposable Linux runner because native Ansible and a general-purpose WSL distribution are unavailable. Inventory and playbook syntax checks are logged separately. The initial Task 13 execution exposed a playbook filter error before any Compose action; it was fixed and retained as redacted evidence. The verified rerun and repeatability check are also logged. They found MySQL and the app healthy and skipped Compose reconciliation. Task 13 is complete.
+
+### Task 14 — Automated provisioning and reliability validation
+
+Task 14 is implemented in `deployment/ansible/provision.yml`, `snapshot.yml`, `rollback.yml`, and `Test-Task14.ps1`. The final run log is `deployment/ansible/task14-evidence/logs/task14-run-20261009-224252.log`; Maven results are in `maven-verify.log`. Ansible validated Compose configuration, the `gym-portal` dependency on healthy MySQL, the existing persistent volume mount, container health, the app endpoint, and unchanged MySQL container identity. A controlled test stopped and restarted only the app and restored health. A deliberately unhealthy test image was deployed to the app service; rollback restored the known-good image ID and HTTP 200 / UP. A repeated rollback and provisioning run each reported `changed=0`, `failed=0`. MySQL was never stopped or recreated. Earlier test-script troubleshooting logs are retained in the same evidence directory and are not presented as passing runs.
+
+Task 14 is complete based on its recorded 2026-10-09 execution. On 2026-10-19, the app-only recovery/persistence flow was freshly verified: the Selenium fixture was written to MySQL, remained after restarting only `gym-portal`, and was then removed; MySQL stayed healthy on the same named volume. The Task 14 safe provisioning playbook and its repeat run also passed with `changed=0, failed=0`. Task 15 remains **PARTIAL**: a fresh Jenkins build requires an interactive Jenkins sign-in, and Docker/Jenkins stage screenshots plus the GitHub account-dependent step and final student review remain. Do not mark the overall assignment complete yet.

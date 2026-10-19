@@ -28,5 +28,5 @@ mvn -DrunSelenium=true -Dtest=MemberPortalSeleniumTest test
 
 Selenium Manager locates Chrome and downloads a matching ChromeDriver as needed. For Jenkins or another remote browser, set `SELENIUM_REMOTE_URL` and `PORTAL_BASE_URL` to URLs resolvable from the test runner. The Compose `e2e` profile supplies a pinned Selenium Grid image; ensure the Docker engine has enough memory for MySQL, Jenkins, and Chrome.
 
-The UI test adds one test member to the local database. It does not clean or delete data. Review and remove test records through the app if desired.
+The UI test adds one synthetic test member to the configured database and updates its status. It does not automatically clean the database. In the recorded Task 15 persistence check, the newly created row was identified by its new database ID, verified after an app-only restart, then deleted by that exact ID; the database query confirmed no row remained. Existing records were left unchanged. Set `PORTAL_EVIDENCE_DIR` only when genuine browser screenshots are wanted; the test then saves the dashboard, registration/search result, edit form, and updated-status screenshots there. Those screenshots use a unique test email and do not include `.env` values.
 

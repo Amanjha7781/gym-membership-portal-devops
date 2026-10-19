@@ -1,0 +1,46 @@
+---
+# Run before a deployment to preserve the currently healthy application image.
+- name: Save a known-good Gym Membership Portal image
+  hosts: gym_portal_local
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_root: /workspace
+    compose_file: /workspace/deployment/docker-compose.yml
+    environment_file: /workspace/.env
+
+  tasks:
+    - name: Run non-mutating deployment and MySQL preflight checks
+      ansible.builtin.import_tasks: tasks/preflight.yml
+
+    - name: Require app container to be running and healthy before snapshot
+      ansible.builtin.assert:
+        that:
+          - >-
+            (compose_state_before.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'gym-portal')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+        fail_msg: App is not healthy; no rollback image was captured.
+
+    - name: Verify app HTTP health before snapshot
+      ansible.builtin.uri:
+        url: http://host.docker.internal:8080/actuator/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: pre_snapshot_health
+      until:
+        - pre_snapshot_health.status == 200
+        - (pre_snapshot_health.json.status | default('')) == 'UP'
+      retries: 3
+      delay: 2
+
+    - name: Save the verified image under the Task 14 rollback tag
+      ansible.builtin.import_tasks: tasks/save-known-good.yml
+
+    - name: Confirm image snapshot did not affect database or application health
+      ansible.builtin.import_tasks: tasks/final-health-check.yml

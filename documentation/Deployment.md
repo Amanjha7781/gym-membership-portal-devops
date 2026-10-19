@@ -33,3 +33,14 @@ docker compose -f deployment/docker-compose.yml logs --tail 100 mysql
 
 To recover after a restart, use the same `.env`, start the stack, check the health endpoint, and confirm a previously registered member remains in the list. Data is kept in a named volume; no cloud or public deployment is configured.
 
+## Ansible configuration management
+
+`deployment/ansible/` contains the local inventory, playbook, and a Docker-based Ansible runner for Windows/Docker Desktop. It validates Compose configuration and preserves the MySQL volume; it skips Compose changes when the app and database are already healthy. See [Ansible configuration management](../deployment/ansible/README.md) for prerequisites, run commands, evidence logs, and limitations.
+
+Task 14's provisioning, controlled app recovery, and known-good image rollback were executed and verified. The repeatable lab test is `deployment/ansible/Test-Task14.ps1`; it briefly disrupts only the app container as part of the failure exercise. Review its test-scope and safeguards in the Ansible guide before running it while users are active.
+
+## Final verification — 2026-10-19
+
+Docker Desktop engine 29.8.0 is running. The application and MySQL containers report healthy, and `Invoke-RestMethod http://localhost:8080/actuator/health` returns `{"status":"UP"}`. A fresh Selenium fixture was verified in MySQL before and after restarting only `gym-portal`; its row was then deleted and the deletion verified. The MySQL container identity and `gym-membership-portal-mysql:/var/lib/mysql` mount were unchanged. See `documentation/task15-evidence/persistence-20261019-115528.txt` and `docker-current-status-20261019.txt`.
+
+The local Jenkins container and saved job configuration are present, but a fresh build needs an authenticated Jenkins session. Historical build #7 remains the last verified successful pipeline; do not report build #8 as run until the Jenkins UI confirms it. Current status is in `documentation/task15-evidence/jenkins-current-status-20261019.txt`.

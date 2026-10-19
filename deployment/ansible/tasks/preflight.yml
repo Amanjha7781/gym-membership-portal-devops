@@ -1,0 +1,139 @@
+---
+- name: Confirm Docker CLI can reach the Docker Desktop daemon
+  ansible.builtin.command:
+    argv: [docker, info]
+  changed_when: false
+  no_log: true
+
+- name: Inspect required files without collecting checksums or file contents
+  ansible.builtin.stat:
+    path: "{{ item }}"
+    get_checksum: false
+    get_mime: false
+    get_attributes: false
+  loop:
+    - "{{ compose_file }}"
+    - "{{ environment_file }}"
+    - "{{ project_root }}/Dockerfile"
+  loop_control:
+    label: "{{ item | basename }}"
+  register: required_file_checks
+
+- name: Require Compose, environment file, and application Dockerfile
+  ansible.builtin.assert:
+    that:
+      - >-
+        (required_file_checks.results
+          | selectattr('stat.exists', 'equalto', true)
+          | selectattr('stat.isreg', 'equalto', true)
+          | list | length) == 3
+    fail_msg: A required deployment file is missing or is not a regular file.
+    success_msg: Required deployment files are present; their contents are not logged.
+
+- name: Validate Docker Compose configuration without rendering environment values
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - config
+      - --quiet
+  args:
+    chdir: "{{ project_root }}"
+  changed_when: false
+
+- name: Read the checked-in Compose YAML structure for dependency assertions
+  ansible.builtin.set_fact:
+    compose_model: "{{ lookup('ansible.builtin.file', compose_file) | from_yaml }}"
+
+- name: Assert the app waits for MySQL and the expected persistent volume is configured
+  ansible.builtin.assert:
+    that:
+      - compose_model.services['gym-portal'].depends_on.mysql.condition == 'service_healthy'
+      - compose_model.volumes.gym_mysql_data.name == 'gym-membership-portal-mysql'
+    fail_msg: Compose dependency or persistent-volume configuration differs from the expected safe architecture.
+    success_msg: App dependency and persistent MySQL volume configuration are correct.
+
+- name: Verify the existing MySQL volume exists without displaying its metadata
+  ansible.builtin.command:
+    argv: [docker, volume, inspect, gym-membership-portal-mysql]
+  changed_when: false
+  no_log: true
+
+- name: Query current Compose container state
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - ps
+      - --all
+      - --format
+      - json
+  args:
+    chdir: "{{ project_root }}"
+  register: compose_state_before
+  changed_when: false
+
+- name: Determine whether MySQL is running and healthy
+  ansible.builtin.set_fact:
+    mysql_initially_healthy: >-
+      {{
+        (compose_state_before.stdout_lines
+          | map('from_json')
+          | selectattr('Service', 'equalto', 'mysql')
+          | selectattr('State', 'equalto', 'running')
+          | selectattr('Health', 'equalto', 'healthy')
+          | list | length == 1)
+      }}
+
+- name: Refuse to change the app if MySQL is not healthy
+  ansible.builtin.assert:
+    that:
+      - mysql_initially_healthy
+    fail_msg: MySQL is not healthy; no app or database service changes were attempted.
+    success_msg: MySQL is running and healthy; provisioning may proceed without changing it.
+
+- name: Capture the current MySQL container ID
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - ps
+      - -q
+      - mysql
+  args:
+    chdir: "{{ project_root }}"
+  register: mysql_container_before
+  changed_when: false
+
+- name: Inspect MySQL mounts without exposing container environment variables
+  ansible.builtin.command:
+    argv:
+      - docker
+      - inspect
+      - "{{ mysql_container_before.stdout | trim }}"
+  register: mysql_container_inspect
+  changed_when: false
+  no_log: true
+
+- name: Check that the retained volume is mounted on MySQL data directory
+  ansible.builtin.assert:
+    that:
+      - >-
+        (((mysql_container_inspect.stdout | from_json | first).Mounts
+          | selectattr('Name', 'equalto', 'gym-membership-portal-mysql')
+          | selectattr('Destination', 'equalto', '/var/lib/mysql')
+          | list | length) == 1)
+    fail_msg: The expected MySQL data volume mount could not be verified; no service changes were attempted.
+    success_msg: Existing MySQL data volume is mounted at /var/lib/mysql.

@@ -1,0 +1,91 @@
+---
+# Ensure the local app service is available while refusing to mutate MySQL.
+- name: Provision and validate the local Gym Membership Portal runtime
+  hosts: gym_portal_local
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_root: /workspace
+    compose_file: /workspace/deployment/docker-compose.yml
+    environment_file: /workspace/.env
+
+  tasks:
+    - name: Run pre-deployment checks; fail before mutation if MySQL is unhealthy
+      ansible.builtin.import_tasks: tasks/preflight.yml
+
+    - name: Determine whether the app is already running and healthy
+      ansible.builtin.set_fact:
+        app_initially_healthy: >-
+          {{
+            (compose_state_before.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'gym-portal')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+          }}
+
+    - name: Verify current app endpoint before taking a rollback snapshot
+      ansible.builtin.uri:
+        url: http://host.docker.internal:8080/actuator/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: initial_portal_health
+      until:
+        - initial_portal_health.status == 200
+        - (initial_portal_health.json.status | default('')) == 'UP'
+      retries: 3
+      delay: 2
+      when: app_initially_healthy
+
+    - name: Save a rollback image before provisioning from a healthy app
+      ansible.builtin.import_tasks: tasks/save-known-good.yml
+      when: app_initially_healthy
+
+    - name: Leave an already-healthy app service untouched
+      ansible.builtin.debug:
+        msg: App and MySQL are already healthy; provisioning makes no service changes.
+      when: app_initially_healthy
+
+    - name: Start only the app service when it is absent, stopped, or unhealthy
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - up
+          - -d
+          - --no-build
+          - --no-deps
+          - gym-portal
+      args:
+        chdir: "{{ project_root }}"
+      when: not app_initially_healthy
+      changed_when: true
+
+    - name: Wait for the application health endpoint
+      ansible.builtin.uri:
+        url: http://host.docker.internal:8080/actuator/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: portal_health
+      until:
+        - portal_health.status == 200
+        - (portal_health.json.status | default('')) == 'UP'
+      retries: 30
+      delay: 5
+
+    - name: Assert all services healthy and MySQL untouched
+      ansible.builtin.import_tasks: tasks/final-health-check.yml
+
+    - name: Report successful provisioning and reliability checks
+      ansible.builtin.debug:
+        msg: >-
+          Provisioning succeeded; MySQL stayed healthy and unchanged, and the
+          app health endpoint returned HTTP 200 with status UP.

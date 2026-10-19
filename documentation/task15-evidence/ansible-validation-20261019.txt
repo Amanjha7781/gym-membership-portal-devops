@@ -1,0 +1,35 @@
+timestamp=2026-10-19T11:56:45.4616347+05:30
+docker_compose_config=PASS (quiet validation; no resolved variables displayed)
+{
+    "_meta": {
+        "hostvars": {
+            "localhost": {
+                "ansible_connection": "local"
+            }
+        },
+        "profile": "inventory_legacy"
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "gym_portal_local"
+        ]
+    },
+    "gym_portal_local": {
+        "hosts": [
+            "localhost"
+        ]
+    }
+}
+
+playbook: site.yml
+syntax_site.yml=PASS
+
+playbook: provision.yml
+syntax_provision.yml=PASS
+
+playbook: snapshot.yml
+syntax_snapshot.yml=PASS
+
+playbook: rollback.yml
+syntax_rollback.yml=PASS

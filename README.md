@@ -58,13 +58,13 @@ The Selenium flow covers login, member creation, search, edit, and admin status 
 
 ## Jenkins
 
-Jenkins is containerized separately and listens at <http://localhost:8081>. Start it with:
+Jenkins is containerized separately and listens at <http://localhost:8081>. The local Pipeline job and its successful build `#7` are verified; see [Jenkins](documentation/Jenkins.md) for the run history. Start the Jenkins service with:
 
 ```powershell
 docker compose -f deployment/jenkins/compose.yml up -d --build
 ```
 
-The first-time Jenkins administrator unlock and plugin setup must be completed in the browser. Pipeline code is in [Jenkinsfile](Jenkinsfile). It runs Maven verification, the Selenium flow, a Docker build, then a guarded deployment stage on the `main` branch. Pipeline uses the ignored project `.env` file through a read-only `/workspace` mount; no password is committed to Git or configured as a Jenkins job literal. See [Jenkins](documentation/Jenkins.md).
+Pipeline code is in [Jenkinsfile](Jenkinsfile). It runs Maven verification, the Selenium flow, a Docker build, then a guarded deployment stage on the `main` branch. Pipeline uses the ignored project `.env` file through a read-only `/workspace` mount; no password is committed to Git or configured as a Jenkins job literal.
 
 ## Repository layout
 
@@ -73,7 +73,8 @@ The first-time Jenkins administrator unlock and plugin setup must be completed i
 - `src/test/java` — JUnit service/integration tests and an opt-in Selenium test.
 - `deployment/docker-compose.yml` — app, MySQL, and optional Selenium Grid.
 - `deployment/jenkins` — reproducible Jenkins image and Compose service.
+- `deployment/ansible` — Ansible inventory, local Docker configuration playbook, runner image, and execution evidence.
 - `deployment/scripts` — Windows PowerShell start/stop/status/restart helpers.
 - `documentation` — architecture, API, database, tests, Docker, Jenkins, workflow, deployment, and final report.
 
-See [Deployment](documentation/Deployment.md) for exact commands and [Evidence checklist](documentation/Evidence_Checklist.md) for items to capture during the lab demonstration.
+See [Deployment](documentation/Deployment.md) for exact commands, the [Evidence index](documentation/Evidence_Index.md) for task-by-task status and proof, and the [Evidence checklist](documentation/Evidence_Checklist.md) for genuine screenshots still to capture. Local database persistence through an app-container restart is verified. Task 4 remains partial because no GitHub remote is configured; Task 15 remains partial because Jenkins requires interactive sign-in for a fresh build and some evidence is still missing.

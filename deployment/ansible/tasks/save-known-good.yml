@@ -1,0 +1,59 @@
+---
+- name: Locate the healthy app container
+  ansible.builtin.command:
+    argv:
+      - docker
+      - compose
+      - --env-file
+      - "{{ environment_file }}"
+      - -f
+      - "{{ compose_file }}"
+      - ps
+      - -q
+      - gym-portal
+  args:
+    chdir: "{{ project_root }}"
+  register: app_container_id
+  changed_when: false
+
+- name: Read app image identity without logging its runtime environment
+  ansible.builtin.command:
+    argv: [docker, inspect, "{{ app_container_id.stdout | trim }}"]
+  register: app_container_inspect
+  changed_when: false
+  no_log: true
+
+- name: Record current healthy application image ID
+  ansible.builtin.set_fact:
+    app_known_good_image_id: "{{ (app_container_inspect.stdout | from_json | first).Image }}"
+
+- name: Inspect existing rollback image tag without printing metadata
+  ansible.builtin.command:
+    argv: [docker, image, inspect, gym-membership-portal:task14-last-known-good]
+  register: known_good_tag_inspect
+  changed_when: false
+  failed_when: false
+  no_log: true
+
+- name: Read existing rollback image ID when the tag is already present
+  ansible.builtin.set_fact:
+    existing_known_good_image_id: >-
+      {{ (known_good_tag_inspect.stdout | from_json | first).Id
+         if known_good_tag_inspect.rc == 0 else '' }}
+
+- name: Save the healthy image as the Task 14 rollback target
+  ansible.builtin.command:
+    argv:
+      - docker
+      - image
+      - tag
+      - "{{ app_known_good_image_id }}"
+      - gym-membership-portal:task14-last-known-good
+  when: existing_known_good_image_id != app_known_good_image_id
+  changed_when: true
+
+- name: Confirm known-good image tag is saved
+  ansible.builtin.assert:
+    that:
+      - app_known_good_image_id is match('^sha256:[0-9a-f]{64}$')
+    success_msg: "Healthy image {{ app_known_good_image_id }} is saved as gym-membership-portal:task14-last-known-good."

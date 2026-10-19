@@ -1,0 +1,21 @@
+{
+    "_meta": {
+        "hostvars": {
+            "localhost": {
+                "ansible_connection": "local"
+            }
+        },
+        "profile": "inventory_legacy"
+    },
+    "all": {
+        "children": [
+            "ungrouped",
+            "gym_portal_local"
+        ]
+    },
+    "gym_portal_local": {
+        "hosts": [
+            "localhost"
+        ]
+    }
+}

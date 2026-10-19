@@ -1,0 +1,263 @@
+
+PLAY [Configure the local Gym Membership Portal Docker environment] ************
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Confirm Docker daemon is available] **************************************
+ok: [localhost] => {
+    "msg": "Docker CLI connected to the Docker Desktop daemon."
+}
+
+TASK [Inspect required local project files without reading configuration values] ***
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, local environment file, and application Dockerfile] *****
+ok: [localhost] => (item=docker-compose.yml) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/workspace/deployment/docker-compose.yml"
+            }
+        },
+        "item": "/workspace/deployment/docker-compose.yml",
+        "stat": {
+            "atime": 1791564168.109339,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 8,
+            "charset": "unknown",
+            "checksum": "[redacted]",
+            "ctime": 1791525995.136954,
+            "dev": 69,
+            "device_type": 0,
+            "executable": true,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 7036874417946371,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "unknown",
+            "mode": "0777",
+            "mtime": 1791525995.136954,
+            "nlink": 1,
+            "path": "/workspace/deployment/docker-compose.yml",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 1921,
+            "uid": 0,
+            "version": null,
+            "wgrp": true,
+            "woth": true,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": true,
+            "xoth": true,
+            "xusr": true
+        }
+    },
+    "msg": "All assertions passed"
+}
+ok: [localhost] => (item=.env) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/workspace/.env"
+            }
+        },
+        "item": "/workspace/.env",
+        "stat": {
+            "atime": 1791564168.1068327,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 0,
+            "charset": "unknown",
+            "checksum": "[redacted]",
+            "ctime": 1791526489.083616,
+            "dev": 69,
+            "device_type": 0,
+            "executable": true,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 14636698789175061,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "unknown",
+            "mode": "0777",
+            "mtime": 1791526489.083616,
+            "nlink": 1,
+            "path": "/workspace/.env",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 212,
+            "uid": 0,
+            "version": null,
+            "wgrp": true,
+            "woth": true,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": true,
+            "xoth": true,
+            "xusr": true
+        }
+    },
+    "msg": "All assertions passed"
+}
+ok: [localhost] => (item=Dockerfile) => {
+    "ansible_loop_var": "item",
+    "changed": false,
+    "item": {
+        "ansible_loop_var": "item",
+        "changed": false,
+        "failed": false,
+        "invocation": {
+            "module_args": {
+                "checksum_algorithm": "sha1",
+                "follow": false,
+                "get_attributes": true,
+                "get_checksum": true,
+                "get_mime": true,
+                "path": "/workspace/Dockerfile"
+            }
+        },
+        "item": "/workspace/Dockerfile",
+        "stat": {
+            "atime": 1791564059.6597102,
+            "attr_flags": "",
+            "attributes": [],
+            "block_size": 4096,
+            "blocks": 0,
+            "charset": "unknown",
+            "checksum": "[redacted]",
+            "ctime": 1791454148.7404988,
+            "dev": 69,
+            "device_type": 0,
+            "executable": true,
+            "exists": true,
+            "gid": 0,
+            "gr_name": "root",
+            "inode": 6755399441268191,
+            "isblk": false,
+            "ischr": false,
+            "isdir": false,
+            "isfifo": false,
+            "isgid": false,
+            "islnk": false,
+            "isreg": true,
+            "issock": false,
+            "isuid": false,
+            "mimetype": "unknown",
+            "mode": "0777",
+            "mtime": 1791454148.7404988,
+            "nlink": 1,
+            "path": "/workspace/Dockerfile",
+            "pw_name": "root",
+            "readable": true,
+            "rgrp": true,
+            "roth": true,
+            "rusr": true,
+            "size": 477,
+            "uid": 0,
+            "version": null,
+            "wgrp": true,
+            "woth": true,
+            "writeable": true,
+            "wusr": true,
+            "xgrp": true,
+            "xoth": true,
+            "xusr": true
+        }
+    },
+    "msg": "All assertions passed"
+}
+
+TASK [Validate Compose syntax and required environment variable references] ****
+ok: [localhost]
+
+TASK [Verify the existing persistent MySQL volume is present] ******************
+ok: [localhost]
+
+TASK [Query current Compose service state] *************************************
+ok: [localhost]
+
+TASK [Determine whether the application and database are already healthy] ******
+[ERROR]: Task failed: Finalization of task args for 'ansible.builtin.set_fact' failed: Error while resolving value for 'portal_stack_healthy': The filter plugin 'ansible.builtin.select' failed: No test named 'length'.
+
+Task failed.
+Origin: /workspace/deployment/ansible/site.yml:93:7
+
+91       changed_when: false
+92
+93     - name: Determine whether the application and database are already healthy
+         ^ column 7
+
+<<< caused by >>>
+
+Finalization of task args for 'ansible.builtin.set_fact' failed.
+Origin: /workspace/deployment/ansible/site.yml:94:7
+
+92
+93     - name: Determine whether the application and database are already healthy
+94       ansible.builtin.set_fact:
+         ^ column 7
+
+<<< caused by >>>
+
+Error while resolving value for 'portal_stack_healthy': The filter plugin 'ansible.builtin.select' failed: No test named 'length'.
+Origin: /workspace/deployment/ansible/site.yml:95:31
+
+93     - name: Determine whether the application and database are already healthy
+94       ansible.builtin.set_fact:
+95         portal_stack_healthy: >-
+                                 ^ column 31
+
+fatal: [localhost]: FAILED! => {"changed": false, "msg": "Task failed: Finalization of task args for 'ansible.builtin.set_fact' failed: Error while resolving value for 'portal_stack_healthy': The filter plugin 'ansible.builtin.select' failed: No test named 'length'."}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=7    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0

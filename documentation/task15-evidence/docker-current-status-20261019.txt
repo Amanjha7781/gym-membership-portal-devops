@@ -1,0 +1,14 @@
+timestamp=2026-10-19T11:56:37.0282257+05:30
+docker_version:
+client=29.8.0 server=29.8.0
+application compose status:
+NAME                      IMAGE                         COMMAND                  SERVICE      CREATED      STATUS                    PORTS
+deployment-gym-portal-1   gym-membership-portal:1.0.0   "java -XX:MaxRAMPerc…"   gym-portal   9 days ago   Up 39 seconds (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp
+deployment-mysql-1        mysql:8.4                     "docker-entrypoint.s…"   mysql        9 days ago   Up 13 minutes (healthy)   3306/tcp, 33060/tcp
+app health:
+{"status":"UP"}
+app container image/health:
+container=/deployment-gym-portal-1 status=running health=healthy image=sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53
+mysql container/volume:
+container=/deployment-mysql-1 status=running health=healthy volume=gym-membership-portal-mysql:/var/lib/mysql
+tagged_image_id=sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 container_image_id=sha256:61d188e4fa9210dc0dfc98dbf2c23df2ecca32d0b5214e98816cbbd949072c53 match=true

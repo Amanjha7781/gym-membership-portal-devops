@@ -1,0 +1,9 @@
+# Test-only health timing override to make the failed-deployment exercise short.
+# The normal Compose file and health check command remain unchanged.
+services:
+  gym-portal:
+    healthcheck:
+      interval: 2s
+      timeout: 1s
+      retries: 2
+      start_period: 0s

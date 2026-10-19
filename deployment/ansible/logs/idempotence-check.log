@@ -1,0 +1,56 @@
+
+PLAY [Configure the local Gym Membership Portal Docker environment] ************
+
+TASK [Confirm Docker CLI can reach the Docker Desktop daemon] ******************
+ok: [localhost]
+
+TASK [Confirm Docker daemon is available] **************************************
+ok: [localhost] => {
+    "msg": "Docker CLI connected to the Docker Desktop daemon."
+}
+
+TASK [Inspect required local project files without reading configuration values] ***
+ok: [localhost] => (item=docker-compose.yml)
+ok: [localhost] => (item=.env)
+ok: [localhost] => (item=Dockerfile)
+
+TASK [Require Compose, local environment file, and application Dockerfile] *****
+ok: [localhost] => {
+    "changed": false,
+    "msg": "Required project files exist; file contents and metadata are not logged."
+}
+
+TASK [Validate Compose syntax and required environment variable references] ****
+ok: [localhost]
+
+TASK [Verify the existing persistent MySQL volume is present] ******************
+ok: [localhost]
+
+TASK [Query current Compose service state] *************************************
+ok: [localhost]
+
+TASK [Determine whether the application and database are already healthy] ******
+ok: [localhost]
+
+TASK [Leave the already-healthy deployment untouched] **************************
+ok: [localhost] => {
+    "msg": "MySQL and Gym Portal are already running and healthy; no Compose restart or rebuild is needed."
+}
+
+TASK [Start or reconcile app and database containers if either is unhealthy] ***
+skipping: [localhost]
+
+TASK [Wait for the application health endpoint] ********************************
+ok: [localhost]
+
+TASK [Confirm MySQL and application remain healthy after configuration] ********
+ok: [localhost]
+
+TASK [Assert required Compose services are healthy] ****************************
+ok: [localhost] => {
+    "changed": false,
+    "msg": "MySQL and Gym Portal are healthy; the application health endpoint returned HTTP 200 with status UP."
+}
+
+PLAY RECAP *********************************************************************
+localhost                  : ok=12   changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0

@@ -1,0 +1,9 @@
+Task 15 final runtime validation — 2026-10-09 22:50:22 +05:30
+COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml config --quiet
+RESULT: Compose configuration valid.
+COMMAND: docker compose --env-file .env -f deployment/docker-compose.yml ps --format table
+NAME                      STATE     <no value>
+deployment-gym-portal-1   running   healthy
+deployment-mysql-1        running   healthy
+COMMAND: GET http://localhost:8080/actuator/health
+HTTP 200 status=UP

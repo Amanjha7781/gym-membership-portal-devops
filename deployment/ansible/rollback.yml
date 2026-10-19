@@ -1,0 +1,181 @@
+---
+# Restore the last image captured by snapshot.yml or provision.yml.
+- name: Roll back an unsuccessful Gym Membership Portal deployment
+  hosts: gym_portal_local
+  connection: local
+  gather_facts: false
+
+  vars:
+    project_root: /workspace
+    compose_file: /workspace/deployment/docker-compose.yml
+    environment_file: /workspace/.env
+    known_good_image: gym-membership-portal:task14-last-known-good
+    compose_app_image: gym-membership-portal:1.0.0
+
+  tasks:
+    - name: Run non-mutating deployment and MySQL preflight checks
+      ansible.builtin.import_tasks: tasks/preflight.yml
+
+    - name: Inspect saved known-good image without logging image metadata
+      ansible.builtin.command:
+        argv: [docker, image, inspect, "{{ known_good_image }}"]
+      register: known_good_image_inspect
+      changed_when: false
+      failed_when: false
+      no_log: true
+
+    - name: Require a saved known-good image before rollback
+      ansible.builtin.assert:
+        that:
+          - known_good_image_inspect.rc == 0
+        fail_msg: No saved known-good image exists; rollback stopped without changing services.
+
+    - name: Record saved known-good image ID
+      ansible.builtin.set_fact:
+        known_good_image_id: "{{ (known_good_image_inspect.stdout | from_json | first).Id }}"
+
+    - name: Inspect currently configured app image tag
+      ansible.builtin.command:
+        argv: [docker, image, inspect, "{{ compose_app_image }}"]
+      register: configured_image_inspect
+      changed_when: false
+      failed_when: false
+      no_log: true
+
+    - name: Determine whether the configured tag needs restoration
+      ansible.builtin.set_fact:
+        configured_image_id: >-
+          {{ (configured_image_inspect.stdout | from_json | first).Id
+             if configured_image_inspect.rc == 0 else '' }}
+
+    - name: Locate the current app container before deciding whether rollback is needed
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - ps
+          - -q
+          - gym-portal
+      args:
+        chdir: "{{ project_root }}"
+      register: current_app_container_id
+      changed_when: false
+
+    - name: Inspect current app image without displaying runtime environment values
+      ansible.builtin.command:
+        argv: [docker, inspect, "{{ current_app_container_id.stdout | trim }}"]
+      register: current_app_inspect
+      when: current_app_container_id.stdout | trim | length > 0
+      changed_when: false
+      no_log: true
+
+    - name: Determine app image and health state before rollback
+      ansible.builtin.set_fact:
+        current_app_image_id: >-
+          {{ (current_app_inspect.stdout | from_json | first).Image
+             if current_app_container_id.stdout | trim | length > 0 else '' }}
+        app_currently_healthy: >-
+          {{
+            (compose_state_before.stdout_lines
+              | map('from_json')
+              | selectattr('Service', 'equalto', 'gym-portal')
+              | selectattr('State', 'equalto', 'running')
+              | selectattr('Health', 'equalto', 'healthy')
+              | list | length == 1)
+          }}
+
+    - name: Decide if image, app state, or Compose state needs rollback
+      ansible.builtin.set_fact:
+        rollback_required: >-
+          {{ configured_image_id != known_good_image_id
+             or current_app_image_id != known_good_image_id
+             or not app_currently_healthy }}
+
+    - name: Restore the Compose app image tag to the saved known-good image
+      ansible.builtin.command:
+        argv: [docker, image, tag, "{{ known_good_image }}", "{{ compose_app_image }}"]
+      when: configured_image_id != known_good_image_id
+      changed_when: true
+
+    - name: Recreate or restart only the app service from the known-good image
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - up
+          - -d
+          - --no-build
+          - --no-deps
+          - gym-portal
+      args:
+        chdir: "{{ project_root }}"
+      when: rollback_required
+      register: rollback_compose
+      changed_when: true
+
+    - name: Leave an already-restored healthy deployment untouched
+      ansible.builtin.debug:
+        msg: App is already healthy on the saved known-good image; rollback is idempotent.
+      when: not rollback_required
+
+    - name: Wait for the restored app health endpoint
+      ansible.builtin.uri:
+        url: http://host.docker.internal:8080/actuator/health
+        method: GET
+        status_code: 200
+        return_content: true
+      register: restored_portal_health
+      until:
+        - restored_portal_health.status == 200
+        - (restored_portal_health.json.status | default('')) == 'UP'
+      retries: 30
+      delay: 5
+
+    - name: Read restored app container ID
+      ansible.builtin.command:
+        argv:
+          - docker
+          - compose
+          - --env-file
+          - "{{ environment_file }}"
+          - -f
+          - "{{ compose_file }}"
+          - ps
+          - -q
+          - gym-portal
+      args:
+        chdir: "{{ project_root }}"
+      register: restored_app_container_id
+      changed_when: false
+
+    - name: Inspect restored app image without logging its runtime environment
+      ansible.builtin.command:
+        argv: [docker, inspect, "{{ restored_app_container_id.stdout | trim }}"]
+      register: restored_app_inspect
+      changed_when: false
+      no_log: true
+
+    - name: Assert restored app runs the saved image and MySQL remains unchanged
+      ansible.builtin.assert:
+        that:
+          - (restored_app_inspect.stdout | from_json | first).Image == known_good_image_id
+          - restored_portal_health.status == 200
+          - (restored_portal_health.json.status | default('')) == 'UP'
+        success_msg: The app was restored to the saved known-good image and reports HTTP 200 / UP.
+
+    - name: Assert MySQL and its persistent volume remain unchanged
+      ansible.builtin.import_tasks: tasks/final-health-check.yml
+
+    - name: Report verified rollback completion
+      ansible.builtin.debug:
+        msg: >-
+          Rollback succeeded using {{ known_good_image }}. Only the app service
+          was reconciled; the MySQL container and persistent volume were preserved.
