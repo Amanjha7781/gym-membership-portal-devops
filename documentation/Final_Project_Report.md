@@ -60,7 +60,7 @@ Task-by-task locations and exact qualifications are in the [Evidence Index](Evid
 
 ## 10. Limitations and remaining actions
 
-- No GitHub remote or webhook is configured. Task 4 is partial until the student selects/authenticates a repository; no URL is claimed.
+- A local commit (`209c2c0`) contains the verified project and evidence changes. No GitHub remote or webhook is configured. Task 4 is partial until the student selects/authenticates a repository; no URL is claimed.
 - Jenkins build #7 is historical. A fresh build #8, its console, and stage screenshot require the student's interactive Jenkins sign-in.
 - A Docker status screenshot is still needed; text output verifies current healthy containers and image.
 - The current database has pre-existing test data from earlier runs. This completion run did not remove it; only the new fixture created by the persistence test was deleted.

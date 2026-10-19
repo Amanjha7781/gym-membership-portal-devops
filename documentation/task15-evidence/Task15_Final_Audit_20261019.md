@@ -40,10 +40,10 @@ The original `application.png.png`, `jenkins-build-7.png.png`, and `jenkins-test
 
 ## Git, secrets, and publication
 
-- `.env` is ignored and not tracked. The database backup is outside the project. No secret values were intentionally written to logs, screenshots, or documentation.
+- `.env` is ignored and not tracked. The database backup is outside the project. No secret values were intentionally written to logs, screenshots, or documentation. Trailing horizontal whitespace and redundant final blank lines were trimmed from text log copies for `git diff --check`; command text and recorded results were unchanged.
 - Seven genuine screenshots are allowed by explicit `.gitignore` entries; no other screenshot directory contents are included by default.
 - No Git remote is configured. No GitHub URL exists in the report. No push/publication was performed.
-- Local repository changes are prepared for a local commit; review the exact staged diff before submission. Keep `.env` and the SQL backup private and excluded.
+- Local project changes and evidence were committed on `main` in commit `209c2c0`; no remote was configured and nothing was pushed. Keep `.env` and the SQL backup private and excluded.
 
 ## Remaining actions
 
